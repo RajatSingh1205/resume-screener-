@@ -9,7 +9,7 @@ SKILLS_LIST = [
 ]
 
 def clean_text(text):
-    text = text.loweer()
+    text = text.lower()
     text = re.sub(r'\s+', ' ', text)    
     text = re.sub(r'[^\w\s]', ' ', text)   
     return text.strip()
