@@ -16,7 +16,11 @@ def clean_text(text):
 
 def extract_skills(text):
     text = clean_text(text)
-    found = [skill for skill in SKILLS_LIST if skill in text]
-    return found 
+    found = []
+    for skill in SKILLS_LIST:
+        # match whole word only to avoid java matching inside javascript
+        pattern = r'\b' + re.escape(skill) + r'\b'
+        if re.search(pattern, text):
+            found.append(skill)
+    return found
 
- 

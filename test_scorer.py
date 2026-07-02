@@ -12,3 +12,4 @@ for r in results:
     print(f"\nResume: {r['name']}")
     print(f"Match Score: {r['score']}%")
     print(f"Matched Skills: {r['matched_skills']}")
+

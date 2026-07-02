@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Resume Screener</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; background: #f5f5f5; }
+    h1 { color: #333; }
+    textarea { width: 100%; padding: 10px; height: 150px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+    input[type=file] { margin-bottom: 12px; display: block; }
+    button { background: #4f46e5; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-size: 15px; cursor: pointer; }
+    button:hover { background: #4338ca; }
+    table { width: 100%; border-collapse: collapse; margin-top: 24px; background: white; border-radius: 8px; overflow: hidden; }
+    th { background: #4f46e5; color: white; padding: 12px; text-align: left; }
+    td { padding: 12px; border-bottom: 1px solid #eee; font-size: 14px; }
+    .high { color: green; font-weight: bold; }
+    .mid { color: orange; font-weight: bold; }
+    .low { color: red; font-weight: bold; }
+    .error { color: red; margin-top: 16px; }
+    #loading { display: none; margin-top: 12px; color: #666; }
+  </style>
+</head>
+<body>
+  <h1>🤖 AI Resume Screener</h1>
+
+  <label><b>Job Description</b></label>
+  <textarea id="jd" placeholder="Paste the job description here..."></textarea>
+
+  <label><b>Upload Resumes (PDF only, select multiple)</b></label>
+  <input type="file" id="resumes" multiple accept=".pdf">
+
+  <button onclick="screen()">Screen Resumes</button>
+  <p id="loading">⏳ Screening resumes, please wait...</p>
+  <div id="results"></div>
+
+  <script>
+  async function screen() {
+    const jd = document.getElementById('jd').value;
+    const files = document.getElementById('resumes').files;
+    const loading = document.getElementById('loading');
+    const resultsDiv = document.getElementById('results');
+
+    if (!jd.trim()) {
+      resultsDiv.innerHTML = '<p class="error">Please enter a job description.</p>';
+      return;
+    }
+    if (files.length === 0) {
+      resultsDiv.innerHTML = '<p class="error">Please upload at least one resume.</p>';
+      return;
+    }
+
+    const form = new FormData();
+    form.append('job_description', jd);
+    for (let f of files) form.append('resumes', f);
+
+    loading.style.display = 'block';
+    resultsDiv.innerHTML = '';
+
+    const res = await fetch('/screen', { method: 'POST', body: form });
+    const data = await res.json();
+    loading.style.display = 'none';
+
+    if (data.error) {
+      resultsDiv.innerHTML = '<p class="error">' + data.error + '</p>';
+      return;
+    }
+
+    let html = '<table><tr><th>Rank</th><th>Resume</th><th>Match Score</th><th>Matched Skills</th></tr>';
+    data.results.forEach((r, i) => {
+      const cls = r.score >= 60 ? 'high' : r.score >= 35 ? 'mid' : 'low';
+      html += `<tr>
+        <td>${i + 1}</td>
+        <td>${r.name}</td>
+        <td class="${cls}">${r.score}%</td>
+        <td>${r.matched_skills.length > 0 ? r.matched_skills.join(', ') : 'none'}</td>
+      </tr>`;
+    });
+    html += '</table>';
+    resultsDiv.innerHTML = html;
+  }
+  </script>
+</body>
+</html>
